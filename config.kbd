@@ -1,0 +1,49 @@
+;; MAIN CONFIGURATION ;;
+
+(defcfg
+  fallthrough false
+  allow-cmd true ;; Will probably soon turn this to true to allow failsafe
+  implicit-around around
+  
+  input (device-file "/dev/input/by-id/usb-Keychron_Keychron_K3-event-kbd")
+  output (uinput-sink "KMonad Keychron K3")
+)
+
+;; TELLING KMONAD MY KEYCHRON K3 KEYBOARD LAYOUT ;;
+;; (well, the buttons I want to be picked up...)
+
+(defsrc
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl lmet lalt           spc            ralt fn   rctl
+)
+
+
+;; ALIASES ;;
+
+(defalias
+  l1 (tap-hold-next 200 esc (layer-toggle l1)) ;; Short press is esc, hold for layer l1
+)
+
+;; BASE LAYER ;;
+
+(deflayer base
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  @l1  a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl lmet lalt           spc            ralt fn   rctl
+)
+
+;; Layer 1 (l1) - CAPS LAYER ;;
+
+(deflayer l1
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  %    w    e    r    t    y    u    i    o    p    [    ]    \
+  XX   a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl lmet lalt           spc            ralt fn   rctl
+)
+
