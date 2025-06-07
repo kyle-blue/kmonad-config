@@ -1,0 +1,11 @@
+[Unit]
+Description=Kmonad Keyboard Remapper
+After=default.target
+
+[Service]
+Type=simple
+Restart=on-failure
+ExecStart=/usr/local/bin/kmonad $HOME/.config/kmonad/config.kbd
+
+[Install]
+WantedBy=default.target

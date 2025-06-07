@@ -6,11 +6,12 @@ This configuration modifies the qwerty keyboard to make it more suitable for pro
 
 ## Pre-requisites
 
-- Clone this repo into ~/.config/kmonad-config
+- Clone this repo into ~/.config/kmonad
 - Install KMonad (linux binary available in releases)
   - Cmod +x and put the binary in /usr/local/bin
-  - Run the install script in this repo
-- Install setxkbmap: `sudo apt update && sudo apt install setxkbmap`
+  - Run `./install.sh`
+
+Bravo. Kmonad will now run on startup with the configuration defined in ./config.kbd
 
 ## Layers
 
