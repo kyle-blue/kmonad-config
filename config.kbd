@@ -4,9 +4,11 @@
   fallthrough true
   allow-cmd true ;; Will probably soon turn this to true to allow failsafe
   implicit-around around-only ;; Need to avoid strange shift pressing behaviour
+  cmp-seq ralt ;; Needed for unicode chars or inputting raw keys without simulating holding shift
   
   input (device-file "/dev/input/by-id/usb-Keychron_Keychron_K3-event-kbd")
-  output (uinput-sink "KMonad Keychron K3")
+  output (uinput-sink "KMonad Keychron K3"
+    "sleep 1 && setxkbmap -option compose:ralt") ;; Also init setxkbmap for instant unicode presses
 )
 
 ;; TELLING KMONAD MY KEYCHRON K3 KEYBOARD LAYOUT ;;
@@ -24,14 +26,17 @@
 ;; ALIASES ;;
 
 (defalias
-  l1 (tap-hold-next 200 esc (layer-toggle l1)) ;; Short press is esc, hold for layer l1
+  l1 (tap-next-release esc (layer-toggle l1)) ;; Short press is esc, hold for layer l1
+
+  plus (tap-macro (press-only lsft) = (release-only lsft))
+  und (tap-macro (press-only lsft) - (release-only lsft))
 )
 
 ;; BASE LAYER ;;
 
 (deflayer base
   grv  1    2    3    4    5    6    7    8    9    0    -    =    XX
-  tab  q    w    e    r    t    y    u    i    o    p    ,    ]    \
+  tab  q    w    e    r    t    y    u    i    o    p    ,    del  \
   @l1  a    s    d    f    g    h    j    k    l    ;    '    ret
   lsft z    x    c    v    b    n    m    bspc .    /    rsft
   lctl lmet lalt           spc            ralt fn   rctl
@@ -39,12 +44,13 @@
 
 ;; Layer 1 (l1) - CAPS LAYER ;;
 
+
 (deflayer l1
-  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX
-  XX   XX   XX   XX   XX   XX   XX   ^    $    -    XX   XX   XX    XX
-  XX   [    {    \(    !    XX  :    =    \)   }    ]    XX   XX
-  XX   XX   XX   XX   XX   XX   +    \_   del  XX   XX   XX
-  XX   XX   XX             XX             XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX    XX   XX   XX   XX   XX   XX    XX
+  XX   XX   XX   XX   XX   XX   XX    ^    $    -    XX   XX   XX    XX
+  XX   [    {    \(    !    XX  :     =    \)   }    ]    XX   XX
+  XX   XX   XX   XX   XX   XX   @plus \_   del  XX   XX   XX
+  XX   XX   XX             spc             XX   XX   XX
 )
 
 #|
