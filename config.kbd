@@ -26,8 +26,8 @@
 ;; ALIASES ;;
 
 (defalias
-  l1 (tap-next-release esc (layer-toggle l1)) ;; Short press is esc, hold for layer l1
-  l2 (tap-next-release tab (layer-toggle l2)) ;; Short press is tab, hold for layer l2
+  l1 (tap-hold-next 200 esc (layer-toggle l1)) ;; Short press is esc, hold for layer l1
+  l2 (tap-hold-next 200 tab (layer-toggle l2)) ;; Short press is tab, hold for layer l2
   l3 (layer-toggle l3) ;; When holding both l1 and l2 we get l3
   lsft (layer-toggle shift)
   rsft (layer-toggle shift)
