@@ -6,7 +6,7 @@
   implicit-around around-only ;; Need to avoid strange shift pressing behaviour
   cmp-seq ralt ;; Needed for unicode chars or inputting raw keys without simulating holding shift
   
-  input (device-file "/dev/input/by-id/usb-Keychron_Keychron_K3-event-kbd")
+  input (device-file "$INPUT_DEVICE_FILE")
   output (uinput-sink "KMonad Keychron K3"
     "sleep 1 && setxkbmap -option compose:ralt") ;; Also init setxkbmap for instant unicode presses
 )

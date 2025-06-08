@@ -13,3 +13,4 @@ mkdir -p ~/.config/systemd/user
 cat ./kmonad.service | envsubst > ~/.config/systemd/user/kmonad.service
 systemctl --user daemon-reload
 systemctl --user enable kmonad.service
+systemctl --user start kmonad.service

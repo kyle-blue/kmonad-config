@@ -5,7 +5,7 @@ After=default.target
 [Service]
 Type=simple
 Restart=on-failure
-ExecStart=/usr/local/bin/kmonad $HOME/.config/kmonad/config.kbd
+ExecStart=bash -c 'set -a; . $HOME/.config/kmonad/.env; set +a; cat $HOME/.config/kmonad/config.kbd | envsubst > $HOME/.config/kmonad/.personal_config.kbd && /usr/local/bin/kmonad $HOME/.config/kmonad/.personal_config.kbd'
 
 [Install]
 WantedBy=default.target
