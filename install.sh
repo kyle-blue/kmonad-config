@@ -17,9 +17,20 @@ set -a
 . ./.env
 set +a
 
-RAND_STRING=$(head -c 4 /dev/urandom | xxd -p)
-export SERVICE_NAME="kmonad-$RAND_STRING"
-export CONFIG_NAME=".config-$RAND_STRING.kbd"
+# Prompt for a user-defined suffix for the service name
+while true; do
+    read -rp "Enter a name suffix for the service (letters, digits, '-' and '_'). Leave empty to use 'default': " NAME
+    NAME=${NAME:-default}
+    # sanitize: keep only allowed chars
+    SAFE_NAME=$(echo "$NAME" | tr -cd '[:alnum:]-_')
+    if [ -n "$SAFE_NAME" ]; then
+        break
+    fi
+    echo "Name contains no valid characters, please try again."
+done
+
+export SERVICE_NAME="kmonad-$SAFE_NAME"
+export CONFIG_NAME=".config-$SAFE_NAME.kbd"
 
 mkdir -p ~/.config/systemd/user
 
