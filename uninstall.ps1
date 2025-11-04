@@ -30,19 +30,30 @@ if (-not (Test-Administrator)) {
 Write-Host "KMonad Windows Service Uninstaller" -ForegroundColor Red
 Write-Host "===================================" -ForegroundColor Red
 
-# Find all KMonad services
+# Find all KMonad services and scheduled tasks
 $kmonadServices = Get-Service -Name "KMonad-*" -ErrorAction SilentlyContinue
+$kmonadTasks = Get-ScheduledTask -TaskName "KMonad-*" -ErrorAction SilentlyContinue
 
-if ($kmonadServices.Count -eq 0) {
-    Write-Host "No KMonad services found." -ForegroundColor Yellow
+if ($kmonadServices.Count -eq 0 -and $kmonadTasks.Count -eq 0) {
+    Write-Host "No KMonad services or scheduled tasks found." -ForegroundColor Yellow
 } else {
-    Write-Host "Found $($kmonadServices.Count) KMonad service(s):" -ForegroundColor Yellow
-    foreach ($service in $kmonadServices) {
-        Write-Host "  - $($service.Name) ($($service.Status))" -ForegroundColor White
+    if ($kmonadServices.Count -gt 0) {
+        Write-Host "Found $($kmonadServices.Count) KMonad service(s):" -ForegroundColor Yellow
+        foreach ($service in $kmonadServices) {
+            Write-Host "  - $($service.Name) ($($service.Status))" -ForegroundColor White
+        }
     }
     
-    $confirmation = Read-Host "Do you want to remove all KMonad services? (y/N)"
+    if ($kmonadTasks.Count -gt 0) {
+        Write-Host "Found $($kmonadTasks.Count) KMonad scheduled task(s):" -ForegroundColor Yellow
+        foreach ($task in $kmonadTasks) {
+            Write-Host "  - $($task.TaskName) ($($task.State))" -ForegroundColor White
+        }
+    }
+    
+    $confirmation = Read-Host "Do you want to remove all KMonad services and scheduled tasks? (y/N)"
     if ($confirmation -eq 'y' -or $confirmation -eq 'Y') {
+        # Remove services
         foreach ($service in $kmonadServices) {
             Write-Host "Stopping and removing service: $($service.Name)" -ForegroundColor Yellow
             
@@ -60,8 +71,28 @@ if ($kmonadServices.Count -eq 0) {
                 Write-Warning "  Failed to remove service: $deleteResult"
             }
         }
+        
+        # Remove scheduled tasks
+        foreach ($task in $kmonadTasks) {
+            Write-Host "Stopping and removing scheduled task: $($task.TaskName)" -ForegroundColor Yellow
+            
+            # Stop the task if running
+            if ($task.State -eq "Running") {
+                Stop-ScheduledTask -TaskName $task.TaskName -ErrorAction SilentlyContinue
+                Write-Host "  Stopped task" -ForegroundColor Green
+            }
+            
+            # Remove the task
+            try {
+                Unregister-ScheduledTask -TaskName $task.TaskName -Confirm:$false
+                Write-Host "  Removed scheduled task successfully" -ForegroundColor Green
+            }
+            catch {
+                Write-Warning "  Failed to remove scheduled task: $($_.Exception.Message)"
+            }
+        }
     } else {
-        Write-Host "Service removal cancelled." -ForegroundColor Yellow
+        Write-Host "Removal cancelled." -ForegroundColor Yellow
     }
 }
 
@@ -71,14 +102,10 @@ if (Test-Path $ConfigDir) {
     Write-Host "Configuration directory found: $ConfigDir" -ForegroundColor Yellow
     
     $configFiles = Get-ChildItem -Path $ConfigDir -Filter "*.kbd" -ErrorAction SilentlyContinue
-    $wrapperFiles = Get-ChildItem -Path $ConfigDir -Filter "kmonad-service-*.bat" -ErrorAction SilentlyContinue
     
-    if ($configFiles.Count -gt 0 -or $wrapperFiles.Count -gt 0) {
+    if ($configFiles.Count -gt 0) {
         Write-Host "Found configuration files:"
         foreach ($file in $configFiles) {
-            Write-Host "  - $($file.Name)" -ForegroundColor White
-        }
-        foreach ($file in $wrapperFiles) {
             Write-Host "  - $($file.Name)" -ForegroundColor White
         }
         
@@ -90,10 +117,6 @@ if (Test-Path $ConfigDir) {
         
         if ($removeConfigs -eq 'y' -or $removeConfigs -eq 'Y') {
             foreach ($file in $configFiles) {
-                Remove-Item -Path $file.FullName -Force
-                Write-Host "  Removed: $($file.Name)" -ForegroundColor Green
-            }
-            foreach ($file in $wrapperFiles) {
                 Remove-Item -Path $file.FullName -Force
                 Write-Host "  Removed: $($file.Name)" -ForegroundColor Green
             }

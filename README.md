@@ -25,15 +25,21 @@ This configuration modifies the qwerty keyboard to make it more suitable for pro
 - Open PowerShell as Administrator
 - Navigate to the repository directory
 - Run `.\install.ps1`
-  - The script will guide you through selecting your keyboard device
-  - It will create a Windows service that runs on startup
+  - The script will guide you through the installation process
+  - It will first try to create a Windows service, and fall back to a scheduled task if needed
 - RESTART your computer for changes to take effect
 
 **Windows Service Management:**
-- Start: `Start-Service -Name "KMonad-<suffix>"`
-- Stop: `Stop-Service -Name "KMonad-<suffix>"`
-- Status: `Get-Service -Name "KMonad-<suffix>"`
+- Start: `Start-Service -Name "KMonad-<suffix>"` or `Start-ScheduledTask -TaskName "KMonad-<suffix>"`
+- Stop: `Stop-Service -Name "KMonad-<suffix>"` or `Stop-ScheduledTask -TaskName "KMonad-<suffix>"`
+- Status: `Get-Service -Name "KMonad-<suffix>"` or `Get-ScheduledTask -TaskName "KMonad-<suffix>"`
 - Uninstall: Run `.\uninstall.ps1` as Administrator
+
+**Windows Troubleshooting:**
+- If you get service startup errors, run `.\test-kmonad.ps1` to diagnose issues
+- KMonad may be blocked by antivirus software - add it to exclusions if needed
+- Some systems work better with scheduled tasks than services
+- Ensure you're using the Windows version of KMonad, not the Linux version
 
 Bravo. Kmonad will now run on startup with the configuration defined in the appropriate config file
 

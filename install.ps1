@@ -38,25 +38,18 @@ function Get-ServiceNameSuffix {
     } while ($true)
 }
 
-# Function to get keyboard device
-function Get-KeyboardDevice {
-    Write-Host "Available keyboard devices:" -ForegroundColor Green
+# Function to show keyboard devices for reference (Windows KMonad uses low-level-hook)
+function Show-KeyboardDevices {
+    Write-Host "Available keyboard devices (for reference only):" -ForegroundColor Green
     $keyboards = Get-PnpDevice -Class "Keyboard" -Status "OK" | Select-Object FriendlyName, InstanceId
     
     for ($i = 0; $i -lt $keyboards.Count; $i++) {
-        Write-Host "[$i] $($keyboards[$i].FriendlyName)" -ForegroundColor Yellow
+        Write-Host "  [$i] $($keyboards[$i].FriendlyName)" -ForegroundColor Yellow
     }
-    
-    do {
-        $selection = Read-Host "Select keyboard device by number (0-$($keyboards.Count - 1))"
-        if ($selection -match '^\d+$' -and [int]$selection -ge 0 -and [int]$selection -lt $keyboards.Count) {
-            return $keyboards[[int]$selection].InstanceId
-        }
-        Write-Host "Invalid selection. Please enter a number between 0 and $($keyboards.Count - 1)." -ForegroundColor Red
-    } while ($true)
+    Write-Host "Note: Windows KMonad will capture all keyboard input using low-level hooks." -ForegroundColor Cyan
 }
 
-# Check if running as administrator
+# Check if running as administrato
 if (-not (Test-Administrator)) {
     Write-Error "This script must be run as Administrator. Please restart PowerShell as Administrator and try again."
     exit 1
@@ -102,9 +95,8 @@ $configName = "config-$serviceNameSuffix.kbd"
 
 Write-Host "Service will be created as: $serviceName" -ForegroundColor Yellow
 
-# Get keyboard device
-$keyboardDevice = Get-KeyboardDevice
-Write-Host "Selected keyboard device: $keyboardDevice" -ForegroundColor Yellow
+# Show keyboard devices for reference
+Show-KeyboardDevices
 
 # Create config directory
 if (-not (Test-Path $ConfigDir)) {
@@ -114,34 +106,33 @@ if (-not (Test-Path $ConfigDir)) {
 
 # Create Windows-specific configuration file
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$windowsConfigPath = Join-Path $scriptDir "config-windows.kbd"
 $linuxConfigPath = Join-Path $scriptDir "config.kbd"
 
-if (Test-Path $linuxConfigPath) {
+$configPath = Join-Path $ConfigDir $configName
+
+if (Test-Path $windowsConfigPath) {
+    # Use the Windows-specific config
+    Copy-Item -Path $windowsConfigPath -Destination $configPath -Force
+    Write-Host "Created Windows config file from template: $configPath" -ForegroundColor Green
+} elseif (Test-Path $linuxConfigPath) {
+    # Convert Linux config to Windows format
     $configContent = Get-Content $linuxConfigPath -Raw
     
     # Replace Linux-specific parts with Windows equivalents
-    $windowsConfig = $configContent -replace '\$INPUT_DEVICE_FILE', "device-file `"$keyboardDevice`""
-    $windowsConfig = $windowsConfig -replace 'input \(device-file "\$INPUT_DEVICE_FILE"\)', "input (device-file `"$keyboardDevice`")"
-    $windowsConfig = $windowsConfig -replace 'output \(uinput-sink "KMonad Keychron K3"[^)]*\)', 'output (send-event-sink)'
+    $windowsConfig = $configContent -replace 'input \(device-file "[^"]*"\)', 'input (low-level-hook)'
+    $windowsConfig = $windowsConfig -replace 'output \(uinput-sink[^)]*\)', 'output (send-event-sink)'
+    $windowsConfig = $windowsConfig -replace '\$INPUT_DEVICE_FILE', 'low-level-hook'
     
-    $configPath = Join-Path $ConfigDir $configName
     $windowsConfig | Out-File -FilePath $configPath -Encoding UTF8
-    Write-Host "Created Windows config file: $configPath" -ForegroundColor Green
+    Write-Host "Created Windows config file from Linux template: $configPath" -ForegroundColor Green
 } else {
-    Write-Error "Source config file not found: $linuxConfigPath"
+    Write-Error "No config template found. Expected config-windows.kbd or config.kbd"
     exit 1
 }
 
-# Create service wrapper script
-$wrapperScript = @"
-@echo off
-cd /d "$ConfigDir"
-"$KMonadPath" "$configPath"
-"@
-
-$wrapperPath = Join-Path $ConfigDir "kmonad-service-$serviceNameSuffix.bat"
-$wrapperScript | Out-File -FilePath $wrapperPath -Encoding ASCII
-Write-Host "Created service wrapper: $wrapperPath" -ForegroundColor Green
+# Create service using NSSM (Non-Sucking Service Manager) approach or direct service registration
+# First, try to create service directly, then fall back to scheduled task if needed
 
 # Check if service already exists and remove it
 $existingService = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
@@ -149,14 +140,17 @@ if ($existingService) {
     Write-Host "Removing existing service: $serviceName" -ForegroundColor Yellow
     Stop-Service -Name $serviceName -Force -ErrorAction SilentlyContinue
     & sc.exe delete $serviceName
-    Start-Sleep -Seconds 2
+    Start-Sleep -Seconds 3
 }
 
-# Create the Windows service using sc.exe
+# Try creating the service directly with KMonad executable
 Write-Host "Creating Windows service: $serviceName" -ForegroundColor Green
 
+# Use the full command line as the binPath
+$binPath = "`"$KMonadPath`" `"$configPath`""
+
 $scResult = & sc.exe create $serviceName `
-    binPath= "`"$wrapperPath`"" `
+    binPath= $binPath `
     start= auto `
     DisplayName= "KMonad Keyboard Remapper ($serviceNameSuffix)" `
     depend= "Winmgmt"
@@ -170,12 +164,57 @@ if ($LASTEXITCODE -eq 0) {
     # Configure service to restart on failure
     & sc.exe failure $serviceName reset= 86400 actions= restart/5000/restart/5000/restart/5000
     
-    # Start the service
+    # Try to start the service
     Write-Host "Starting service..." -ForegroundColor Yellow
-    $startResult = Start-Service -Name $serviceName -PassThru -ErrorAction SilentlyContinue
     
-    if ($startResult -and $startResult.Status -eq "Running") {
-        Write-Host "Service started successfully!" -ForegroundColor Green
+    try {
+        $startResult = Start-Service -Name $serviceName -PassThru -ErrorAction Stop
+        if ($startResult -and $startResult.Status -eq "Running") {
+            Write-Host "Service started successfully!" -ForegroundColor Green
+            $serviceSuccess = $true
+        }
+    }
+    catch {
+        Write-Warning "Service created but failed to start: $($_.Exception.Message)"
+        Write-Host "This is often due to KMonad requiring interactive desktop access." -ForegroundColor Yellow
+        $serviceSuccess = $false
+    }
+    
+    if (-not $serviceSuccess) {
+        Write-Host "Removing the service and creating a scheduled task instead..." -ForegroundColor Yellow
+        & sc.exe delete $serviceName
+        
+        # Create a scheduled task instead
+        $taskName = "KMonad-$serviceNameSuffix"
+        
+        # Remove existing task if it exists
+        $existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+        if ($existingTask) {
+            Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
+        }
+        
+        # Create the scheduled task
+        $action = New-ScheduledTaskAction -Execute $KMonadPath -Argument "`"$configPath`""
+        $trigger = New-ScheduledTaskTrigger -AtLogOn
+        $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Highest
+        $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+        
+        Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Description "KMonad keyboard remapper for enhanced keyboard functionality"
+        
+        Write-Host "Created scheduled task: $taskName" -ForegroundColor Green
+        Write-Host "KMonad will start automatically when you log in." -ForegroundColor Green
+        
+        # Try to start the task
+        Start-ScheduledTask -TaskName $taskName
+        Write-Host "Started scheduled task." -ForegroundColor Green
+        
+        Write-Host ""
+        Write-Host "You can manage the scheduled task using:" -ForegroundColor Cyan
+        Write-Host "  Start:   Start-ScheduledTask -TaskName '$taskName'" -ForegroundColor White
+        Write-Host "  Stop:    Stop-ScheduledTask -TaskName '$taskName'" -ForegroundColor White
+        Write-Host "  Status:  Get-ScheduledTask -TaskName '$taskName'" -ForegroundColor White
+        Write-Host "  Remove:  Unregister-ScheduledTask -TaskName '$taskName' -Confirm:`$false" -ForegroundColor White
+    } else {
         Write-Host ""
         Write-Host "KMonad is now running as a Windows service and will start automatically on boot." -ForegroundColor Green
         Write-Host "Service name: $serviceName" -ForegroundColor Yellow
@@ -186,9 +225,6 @@ if ($LASTEXITCODE -eq 0) {
         Write-Host "  Stop:    Stop-Service -Name '$serviceName'" -ForegroundColor White
         Write-Host "  Status:  Get-Service -Name '$serviceName'" -ForegroundColor White
         Write-Host "  Remove:  sc.exe delete '$serviceName'" -ForegroundColor White
-    } else {
-        Write-Warning "Service created but failed to start. You may need to check the configuration."
-        Write-Host "Try starting manually with: Start-Service -Name '$serviceName'" -ForegroundColor Yellow
     }
 } else {
     Write-Error "Failed to create service. Error code: $LASTEXITCODE"
