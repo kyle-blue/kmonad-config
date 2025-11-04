@@ -1,0 +1,104 @@
+;; WINDOWS CONFIGURATION FOR KMONAD ;;
+
+(defcfg
+  fallthrough true
+  allow-cmd true
+  implicit-around around-only
+  cmp-seq ralt
+  
+  ;; Windows uses different input/output methods
+  input (low-level-hook)
+  output (send-event-sink)
+)
+
+;; TELLING KMONAD MY KEYCHRON K3 KEYBOARD LAYOUT ;;
+;; (well, the buttons I want to be picked up...)
+
+(defsrc
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl lmet lalt           spc            ralt fn   rctl
+)
+
+
+;; ALIASES ;;
+
+(defalias
+  l1 (tap-next esc (layer-toggle l1)) ;; Short press is esc, hold for layer l1
+  l2 (tap-next tab (layer-toggle l2)) ;; Short press is tab, hold for layer l2
+  l3 (layer-toggle l3) ;; When holding both l1 and l2 we get l3
+  lsft (layer-toggle shift)
+  rsft (layer-toggle shift)
+
+  plus (tap-macro (press-only lsft) = (release-only lsft)) ;; To allow fast +=
+)
+
+;; BASE LAYER ;;
+
+(deflayer base
+  XX    XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX
+  @l2   q    w    e    r    t    y    u    i    o    p    ,    del   XX
+  @l1   a    s    d    f    g    h    j    k    l    ;    '    ret
+  @lsft z    x    c    v    b    n    m    bspc .    /    @rsft
+  lctl  lmet lalt           spc            ralt fn   rctl
+)
+
+
+;; SHIFT LAYER (to disable some keys to stop bad habits) ;;
+
+(deflayer shift
+  XX     XX     XX   XX   XX   XX   XX   XX   XX     XX   XX   XX   XX    XX
+  @l2    Q      W    E    R    T    Y    U    I      O    P    XX   S-del   XX
+  @l1    A      S    D    F    G    H    J    K      L    \_   XX   S-ret
+  XX     Z      X    C    V    B    N    M    S-bspc XX   XX   rsft
+  S-lctl S-lmet S-lalt           S-spc        S-ralt S-fn S-rctl
+)
+
+
+;; Layer 1 (l1) - CAPS LAYER - SYMBOLS ;;
+
+(deflayer l1
+  XX   XX   XX   XX   XX   XX   XX    XX   XX   XX   XX   XX   XX    XX
+  @l3  ~    %    #    `    XX   @     ^    $    -    &    *    XX    XX
+  XX   [    {    \(   !    XX   :     =    \)   }    ]    "    XX
+  XX   XX   XX   <    >    XX   @plus \_   ?    \    |    XX
+  XX   XX   XX             spc             XX   XX   XX
+)
+
+
+;; Layer 2 (l2) - TAB LAYER - NUMBERS ;;
+
+(deflayer l2
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX
+  XX   +    -    *    /    XX   XX   7    8    9    XX   ,    XX    XX
+  @l3  XX   XX   =    XX   XX   XX   4    5    6    XX   XX   XX
+  XX   XX   XX   XX   XX   XX   0    1    2    3    XX   XX
+  XX   XX   XX             spc            XX   XX   XX
+)
+
+
+;; Layer 3 (l3) - CAPS AND TAB LAYER - MOVEMENTS ;;
+
+(deflayer l3
+  XX   XX   XX   XX   XX   XX   XX    XX       XX      XX    XX   XX   XX    XX
+  XX   XX   XX   XX   XX   XX   home  C-left   C-right end   XX   XX   XX    XX
+  XX   XX   XX   XX   XX   XX   left  down     up      right XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX    pagedown pageup  XX    XX   XX
+  XX   XX   XX             spc                 XX      XX    XX
+)
+
+#|
+
+EMPTY LAYER (useful as a start point)
+
+(deflayer empty
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+  XX   XX   XX             XX             XX   XX   XX
+)
+
+|#

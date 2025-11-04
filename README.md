@@ -4,18 +4,38 @@
 
 This configuration modifies the qwerty keyboard to make it more suitable for programming, and to minimise reaching for keys which displace the hands from regular typing positions
 
-## Pre-requisites and how to use
+## Pre-requisites and Installation
+
+### Linux Installation
 
 - Clone this repo into ~/.config/kmonad
 - Before installing, look for your correct keyboard device path in either `/dev/input/by-id` (for connected keyboards) or `/dev/input/by-path` (for in-built keyboards). Place the correct path under the `DEVICE_FILE_PATH` variable in ./.env.
   - Current laptop value: `/dev/input/by-path/pci-0000:06:00.4-usb-0:3:1.0-event-kbd`
   - Current desktop value: `/dev/input/by-id/usb-Keychron_Keychron_K3-event-kbd`
 - Install KMonad (linux binary available in [kmonad releases](https://github.com/kmonad/kmonad/releases))
-  - Cmod +x and put the binary in /usr/local/bin
+  - Chmod +x and put the binary in /usr/local/bin
   - Run `./install.sh`
 - LOG OUT AND LOG BACK IN (OR RESTART)
 
-Bravo. Kmonad will now run on startup with the configuration defined in ./config.kbd
+### Windows Installation
+
+- Download this repository to any location (e.g., `C:\kmonad-config`)
+- Download KMonad for Windows from [kmonad releases](https://github.com/kmonad/kmonad/releases)
+  - Place `kmonad.exe` in `C:\Program Files\kmonad\` (or another location)
+- Open PowerShell as Administrator
+- Navigate to the repository directory
+- Run `.\install.ps1`
+  - The script will guide you through selecting your keyboard device
+  - It will create a Windows service that runs on startup
+- RESTART your computer for changes to take effect
+
+**Windows Service Management:**
+- Start: `Start-Service -Name "KMonad-<suffix>"`
+- Stop: `Stop-Service -Name "KMonad-<suffix>"`
+- Status: `Get-Service -Name "KMonad-<suffix>"`
+- Uninstall: Run `.\uninstall.ps1` as Administrator
+
+Bravo. Kmonad will now run on startup with the configuration defined in the appropriate config file
 
 ## Layers
 
