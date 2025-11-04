@@ -102,10 +102,14 @@ if (Test-Path $ConfigDir) {
     Write-Host "Configuration directory found: $ConfigDir" -ForegroundColor Yellow
     
     $configFiles = Get-ChildItem -Path $ConfigDir -Filter "*.kbd" -ErrorAction SilentlyContinue
+    $vbsFiles = Get-ChildItem -Path $ConfigDir -Filter "kmonad-hidden-*.vbs" -ErrorAction SilentlyContinue
     
-    if ($configFiles.Count -gt 0) {
+    if ($configFiles.Count -gt 0 -or $vbsFiles.Count -gt 0) {
         Write-Host "Found configuration files:"
         foreach ($file in $configFiles) {
+            Write-Host "  - $($file.Name)" -ForegroundColor White
+        }
+        foreach ($file in $vbsFiles) {
             Write-Host "  - $($file.Name)" -ForegroundColor White
         }
         
@@ -117,6 +121,10 @@ if (Test-Path $ConfigDir) {
         
         if ($removeConfigs -eq 'y' -or $removeConfigs -eq 'Y') {
             foreach ($file in $configFiles) {
+                Remove-Item -Path $file.FullName -Force
+                Write-Host "  Removed: $($file.Name)" -ForegroundColor Green
+            }
+            foreach ($file in $vbsFiles) {
                 Remove-Item -Path $file.FullName -Force
                 Write-Host "  Removed: $($file.Name)" -ForegroundColor Green
             }

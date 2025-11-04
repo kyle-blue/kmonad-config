@@ -193,11 +193,19 @@ if ($LASTEXITCODE -eq 0) {
             Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
         }
         
-        # Create the scheduled task
-        $action = New-ScheduledTaskAction -Execute $KMonadPath -Argument "`"$configPath`""
+        # Create a VBScript wrapper to run KMonad hidden in background
+        $vbsWrapperPath = Join-Path $ConfigDir "kmonad-hidden-$serviceNameSuffix.vbs"
+        $vbsScript = @"
+Set WshShell = CreateObject("WScript.Shell")
+WshShell.Run """$KMonadPath"" ""$configPath""", 0, False
+"@
+        $vbsScript | Out-File -FilePath $vbsWrapperPath -Encoding ASCII
+        
+        # Create the scheduled task that runs the VBScript (which runs KMonad hidden)
+        $action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$vbsWrapperPath`""
         $trigger = New-ScheduledTaskTrigger -AtLogOn
         $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Highest
-        $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+        $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -Hidden
         
         Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Description "KMonad keyboard remapper for enhanced keyboard functionality"
         
