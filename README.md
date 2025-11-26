@@ -26,67 +26,55 @@ This configuration modifies the qwerty keyboard to make it more suitable for pro
 
 #### Installation Steps
 
-1. **Open PowerShell as Administrator**
-   - Right-click Start → Windows PowerShell (Admin)
+1. **Open PowerShell** (no admin required)
+   - Open PowerShell normally (no need to run as Administrator)
 
 2. **Navigate to the repository directory**
    ```powershell
    cd C:\Users\YourName\Documents\kmonad-config
    ```
+3. **Allow powershell script execution for your current session**
+   ```powershell
+   Set-ExecutionPolicy Bypass -Scope Process
+   ```
 
-3. **Run the installation script**
+4. **Run the installation script**
    ```powershell
    .\install.ps1
    ```
-   
-   **If installing for a different user than your admin account:**
-   ```powershell
-   .\install.ps1 -TargetUser "YourNormalUsername"
-   ```
 
-4. **Follow the prompts:**
-   - Choose target user (if not specified as parameter)
-   - Enter service name suffix (or press Enter for "default")
+5. **Follow the prompts:**
    - Confirm KMonad path if different from default
 
-5. **The script will:**
-   - Create config directory in target user's AppData folder
+6. **The script will:**
+   - Automatically detect the current logged-in user
+   - Create config directory in user's AppData folder (`%APPDATA%\kmonad`)
    - Copy and configure the appropriate .kbd file
-   - Attempt to create a Windows service (will fall back to scheduled task if service fails)
-   - Start KMonad automatically
+   - Create a VBScript wrapper to run KMonad hidden in the background
+   - Add a shortcut to the Windows Startup folder
 
-6. **RESTART your computer** for changes to take full effect
+7. **Start KMonad immediately** (or it will auto-start on next login):
+   - Double-click the shortcut in: `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\KMonad.lnk`
+   - Or run: `wscript.exe "%APPDATA%\kmonad\kmonad-hidden.vbs"`
 
-#### Management Commands
+#### Management
 
-**If installed as a Service:**
+**Start KMonad manually:**
 ```powershell
-# Start service
-Start-Service -Name "KMonad-default"
-
-# Stop service
-Stop-Service -Name "KMonad-default"
-
-# Check status
-Get-Service -Name "KMonad-default"
-
-# Remove service (run as Admin)
-cmd /c "sc.exe delete KMonad-default"
+wscript.exe "$env:APPDATA\kmonad\kmonad-hidden.vbs"
 ```
 
-**If installed as a Scheduled Task:**
+**Stop KMonad:**
 ```powershell
-# Start task
-Start-ScheduledTask -TaskName "KMonad-default"
+# Find KMonad process
+Get-Process | Where-Object {$_.ProcessName -eq "kmonad"} | Stop-Process
 
-# Stop task
-Stop-ScheduledTask -TaskName "KMonad-default"
+# Or use Task Manager to end kmonad.exe
+```
 
-# Check status
-Get-ScheduledTask -TaskName "KMonad-default"
-
-# Remove task
-Unregister-ScheduledTask -TaskName "KMonad-default" -Confirm:$false
+**Check if KMonad is running:**
+```powershell
+Get-Process | Where-Object {$_.ProcessName -eq "kmonad"}
 ```
 
 **Uninstall:**
@@ -94,31 +82,35 @@ Unregister-ScheduledTask -TaskName "KMonad-default" -Confirm:$false
 .\uninstall.ps1
 ```
 
+#### File Locations
+
+After installation, you'll find:
+- Config file: `%APPDATA%\kmonad\config.kbd`
+- VBS wrapper: `%APPDATA%\kmonad\kmonad-hidden.vbs`
+- Startup shortcut: `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\KMonad.lnk`
+
 #### Troubleshooting
 
 **Config file not created:**
-- If running as admin user different from target user, use: `.\install.ps1 -TargetUser "YourUsername"`
-- Check that config templates exist in the repository directory
+- Ensure config templates (`config-windows.kbd` or `config.kbd`) exist in the repository directory
+- Check file permissions in `%APPDATA%` folder
 
-**Service won't start:**
-- The script automatically falls back to scheduled task (which is often more reliable on Windows)
-- Run `.\test-kmonad.ps1` to diagnose KMonad configuration issues
-- Verify KMonad path is correct
-
-**Permission/Access Denied:**
-- Ensure PowerShell is running as Administrator
-- Disable antivirus temporarily or add KMonad to exclusions
-- Some antivirus software blocks low-level keyboard hooks
+**KMonad path not found:**
+- The script will prompt you to enter the correct path to `kmonad.exe`
+- Common locations: `C:\Program Files\kmonad\kmonad.exe`, `%LOCALAPPDATA%\bin\kmonad.exe`
 
 **KMonad not working after login:**
-- Restart your computer (required for first installation)
-- Check if scheduled task is enabled: `Get-ScheduledTask -TaskName "KMonad-default"`
-- Manually start: `Start-ScheduledTask -TaskName "KMonad-default"`
+- Check if shortcut exists in Startup folder
+- Manually run the VBS script to test: `wscript.exe "%APPDATA%\kmonad\kmonad-hidden.vbs"`
+- Run `.\test-kmonad.ps1` to diagnose configuration issues
 
-**Multiple Installations:**
-- You can install multiple configurations with different suffixes
-- Example: `.\install.ps1 -TargetUser "User1"` then enter "gaming" as suffix
-- This creates "KMonad-gaming" service/task with separate config
+**Permission/Access Denied:**
+- Some antivirus software blocks low-level keyboard hooks
+- Add KMonad to antivirus exclusions or temporarily disable to test
+
+**KMonad crashes or stops:**
+- Check config file syntax: `%APPDATA%\kmonad\config.kbd`
+- Look for error messages when running KMonad directly: `& "C:\Program Files\kmonad\kmonad.exe" "$env:APPDATA\kmonad\config.kbd"`
 
 Bravo. Kmonad will now run on startup with the configuration defined in the appropriate config file
 
