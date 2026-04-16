@@ -1,10 +1,72 @@
-# KMonad Configuration
+# Keyboard Remapper Configuration
 
 ## QWERTY Enhanced
 
 This configuration modifies the qwerty keyboard to make it more suitable for programming, and to minimise reaching for keys which displace the hands from regular typing positions
 
+Configurations are provided for:
+- **KMonad** — Linux and Windows
+- **Kanata** — macOS (required for macOS Tahoe+ where KMonad is incompatible)
+
 ## Pre-requisites and Installation
+
+### macOS Installation (Kanata)
+
+KMonad does not work on macOS Tahoe. This project uses [Kanata](https://github.com/jtroo/kanata) instead, which provides the same remapping functionality.
+
+#### Prerequisites
+- Install Kanata: `brew install kanata`
+- Install [Karabiner-DriverKit-VirtualHIDDevice](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/releases) (v5+)
+  - After installing, open the app once to activate the driver extension
+  - Grant permissions when prompted in System Settings > Privacy & Security
+
+#### Installation Steps
+
+1. **Clone this repo** (or navigate to it)
+2. **Run the install script:**
+   ```bash
+   ./install-macos.sh
+   ```
+3. The script will:
+   - Validate the Kanata config
+   - Copy config to `~/.config/kanata/kanata.kbd`
+   - Create a launchd daemon for auto-start on boot
+   - Start Kanata immediately
+
+4. **Grant Input Monitoring permission** if prompted:
+   - System Settings > Privacy & Security > Input Monitoring
+   - Add your terminal app (or kanata)
+
+#### Management
+
+**Check status:**
+```bash
+sudo launchctl list | grep kanata
+```
+
+**View logs:**
+```bash
+cat /tmp/kanata.out.log
+cat /tmp/kanata.err.log
+```
+
+**Restart after config changes:**
+```bash
+sudo launchctl unload /Library/LaunchDaemons/com.kanata.keyboard.plist
+sudo launchctl load /Library/LaunchDaemons/com.kanata.keyboard.plist
+```
+
+**Uninstall:**
+```bash
+./uninstall-macos.sh
+```
+
+#### macOS Adaptation Notes
+
+The movement layer (Caps+Tab held) uses macOS-native shortcuts:
+- **Word navigation:** Alt (Option) + Left/Right (instead of Ctrl+Left/Right on Linux)
+- **Line begin/end:** Cmd + Left/Right (instead of Home/End on Linux)
+- Arrow keys and PageUp/PageDown remain unchanged
 
 ### Linux Installation
 

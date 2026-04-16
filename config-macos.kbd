@@ -1,0 +1,88 @@
+;; KANATA CONFIGURATION - macOS ;;
+;; Ported from KMonad configuration ;;
+
+(defcfg
+  process-unmapped-keys yes  ;; Pass through keys not in defsrc (equiv. to kmonad fallthrough)
+)
+
+;; KEYBOARD LAYOUT ;;
+;; Note: fn key is omitted as it cannot be reliably intercepted on macOS.
+;; It will pass through unmodified via process-unmapped-keys.
+
+(defsrc
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl lmet lalt           spc            ralt rctl
+)
+
+
+;; ALIASES ;;
+
+(defalias
+  l1 (tap-hold-press 200 200 esc (layer-toggle l1))   ;; Tap: esc, Hold: symbol layer
+  l2 (tap-hold-press 200 200 tab (layer-toggle l2))   ;; Tap: tab, Hold: number layer
+  l3 (layer-toggle l3)                                 ;; Combined caps+tab layer
+  lsf (layer-toggle shift)                             ;; Custom shift layer
+  rsf (layer-toggle shift)
+
+  pls S-=  ;; Plus sign (+) — allows fast += typing
+)
+
+
+;; BASE LAYER ;;
+
+(deflayer base
+  XX    XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX
+  @l2   q    w    e    r    t    y    u    i    o    p    ,    del   XX
+  @l1   a    s    d    f    g    h    j    k    l    ;    '    ret
+  @lsf  z    x    c    v    b    n    m    bspc .    /    @rsf
+  lctl  lmet lalt           spc            ralt rctl
+)
+
+
+;; SHIFT LAYER (custom shift — blocks some keys to prevent bad habits) ;;
+
+(deflayer shift
+  XX     XX     XX   XX   XX   XX   XX   XX   XX     XX   XX   XX    XX      XX
+  @l2    S-q    S-w  S-e  S-r  S-t  S-y  S-u  S-i   S-o  S-p  XX    S-del   XX
+  @l1    S-a    S-s  S-d  S-f  S-g  S-h  S-j  S-k   S-l  S--  XX    S-ret
+  XX     S-z    S-x  S-c  S-v  S-b  S-n  S-m  S-bspc XX   XX   rsft
+  S-lctl S-lmet S-lalt           S-spc        S-ralt S-rctl
+)
+
+
+;; Layer 1 (l1) - CAPS LAYER - SYMBOLS ;;
+
+(deflayer l1
+  XX   XX    XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX
+  @l3  S-grv S-5  S-3  grv  XX   S-2  S-6  S-4  -    S-7  S-8  XX    XX
+  XX   [     S-[  S-9  S-1  XX   S-;  =    S-0  S-]  ]    S-'  XX
+  XX   XX    XX   S-,  S-.  XX   @pls S--  S-/  \    S-\  XX
+  XX   XX    XX             spc             XX   XX
+)
+
+
+;; Layer 2 (l2) - TAB LAYER - NUMBERS ;;
+
+(deflayer l2
+  XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX    XX
+  XX   S-=  -    S-8  /    XX   XX   7    8    9    XX   ,    XX    XX
+  @l3  XX   XX   =    XX   XX   XX   4    5    6    XX   XX   XX
+  XX   XX   XX   XX   XX   XX   0    1    2    3    XX   XX
+  XX   XX   XX             spc            XX   XX
+)
+
+
+;; Layer 3 (l3) - CAPS AND TAB LAYER - MOVEMENTS ;;
+;; macOS adaptation: Alt (Option) + arrows for word navigation (Ctrl+arrows on Linux)
+;;                   Cmd + arrows for line begin/end (Home/End on Linux)
+
+(deflayer l3
+  XX   XX   XX   XX   XX   XX   XX      XX       XX       XX      XX   XX   XX    XX
+  XX   XX   XX   XX   XX   XX   M-left  A-left   A-rght   M-rght  XX   XX   XX    XX
+  XX   XX   XX   XX   XX   XX   left    down     up       rght    XX   XX   XX
+  XX   XX   XX   XX   XX   XX   XX      pgdn     pgup     XX      XX   XX
+  XX   XX   XX             spc                   XX       XX
+)
