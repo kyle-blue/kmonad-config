@@ -14,7 +14,7 @@
   tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
   caps a    s    d    f    g    h    j    k    l    ;    '    ret
   lsft z    x    c    v    b    n    m    ,    .    /    rsft
-  lctl lmet lalt           spc            ralt rctl
+  fn   lctl lmet lalt           spc            ralt rctl
 )
 
 
@@ -38,7 +38,7 @@
   @l2   q    w    e    r    t    y    u    i    o    p    ,    del   XX
   @l1   a    s    d    f    g    h    j    k    l    ;    '    ret
   @lsf  z    x    c    v    b    n    m    bspc .    /    @rsf
-  lctl  lmet lalt           spc            ralt rctl
+  lctl  lctl  lmet lalt           spc            ralt rctl
 )
 
 
@@ -49,7 +49,7 @@
   @l2    S-q    S-w  S-e  S-r  S-t  S-y  S-u  S-i   S-o  S-p  XX    S-del   XX
   @l1    S-a    S-s  S-d  S-f  S-g  S-h  S-j  S-k   S-l  S--  XX    S-ret
   XX     S-z    S-x  S-c  S-v  S-b  S-n  S-m  S-bspc XX   XX   rsft
-  S-lctl S-lmet S-lalt           S-spc        S-ralt S-rctl
+  S-lctl S-lctl S-lmet S-lalt           S-spc        S-ralt S-rctl
 )
 
 
@@ -60,7 +60,7 @@
   @l3  S-grv S-5  S-3  grv  XX   S-2  S-6  S-4  -    S-7  S-8  XX    XX
   XX   [     S-[  S-9  S-1  XX   S-;  =    S-0  S-]  ]    S-'  XX
   XX   XX    XX   S-,  S-.  XX   @pls S--  S-/  \    S-\  XX
-  XX   XX    XX             spc             XX   XX
+  XX   XX   XX    XX             spc             XX   XX
 )
 
 
@@ -71,7 +71,7 @@
   XX   S-=  -    S-8  /    XX   XX   7    8    9    XX   ,    XX    XX
   @l3  XX   XX   =    XX   XX   XX   4    5    6    XX   XX   XX
   XX   XX   XX   XX   XX   XX   0    1    2    3    XX   XX
-  XX   XX   XX             spc            XX   XX
+  XX   XX   XX   XX             spc            XX   XX
 )
 
 
@@ -84,5 +84,5 @@
   XX   XX   XX   XX   XX   XX   M-left  A-left   A-rght   M-rght  XX   XX   XX    XX
   XX   XX   XX   XX   XX   XX   left    down     up       rght    XX   XX   XX
   XX   XX   XX   XX   XX   XX   XX      pgdn     pgup     XX      XX   XX
-  XX   XX   XX             spc                   XX       XX
+  XX   XX   XX   XX             spc                   XX       XX
 )
