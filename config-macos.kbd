@@ -38,7 +38,7 @@
   @l2   q    w    e    r    t    y    u    i    o    p    ,    del   XX
   @l1   a    s    d    f    g    h    j    k    l    ;    '    ret
   @lsf  z    x    c    v    b    n    m    bspc .    /    @rsf
-  lctl  lctl  lmet lalt           spc            ralt rctl
+  lctl  lctl  lmet lalt           spc            ralt ralt
 )
 
 
@@ -49,7 +49,7 @@
   @l2    S-q    S-w  S-e  S-r  S-t  S-y  S-u  S-i   S-o  S-p  XX    S-del   XX
   @l1    S-a    S-s  S-d  S-f  S-g  S-h  S-j  S-k   S-l  S--  XX    S-ret
   XX     S-z    S-x  S-c  S-v  S-b  S-n  S-m  S-bspc XX   XX   rsft
-  S-lctl S-lctl S-lmet S-lalt           S-spc        S-ralt S-rctl
+  S-lctl S-lctl S-lmet S-lalt           S-spc        S-ralt S-ralt
 )
 
 
