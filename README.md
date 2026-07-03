@@ -15,9 +15,11 @@ Configurations are provided for:
 KMonad does not work on macOS Tahoe. This project uses [Kanata](https://github.com/jtroo/kanata) instead, which provides the same remapping functionality.
 
 #### Prerequisites
-- Install Kanata: `brew install kanata`
-- Install [Karabiner-DriverKit-VirtualHIDDevice](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/releases) (v5+)
-  - After installing, open the app once to activate the driver extension
+- Install Kanata: `brew install kanata` (this guide assumes kanata 1.11.0)
+- Install [Karabiner-DriverKit-VirtualHIDDevice **v6.x**](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/releases/tag/v6.14.0) — **v6.14.0 recommended**
+  - ⚠️ **Do NOT install v7.0.0 or v8.0.0.** kanata 1.11.0 is only compatible with the v6.x driver. In v7 the pqrs daemon changed its socket path and protocol version, so kanata can't connect: it grabs your keyboard but sends output nowhere, leaving **every key dead** while `kanata.out.log` fills with `connect_failed asio.system:2`. There is currently no kanata release that supports v7/v8.
+  - Direct download: [Karabiner-DriverKit-VirtualHIDDevice-6.14.0.pkg](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/releases/download/v6.14.0/Karabiner-DriverKit-VirtualHIDDevice-6.14.0.pkg)
+  - After installing, activate the driver extension and approve it in System Settings > General > Login Items & Extensions (Driver Extensions)
   - Grant permissions when prompted in System Settings > Privacy & Security
 
 #### Installation Steps

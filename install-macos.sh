@@ -3,12 +3,23 @@
 #
 # Requirements:
 #   - kanata (brew install kanata)
-#   - Karabiner-DriverKit-VirtualHIDDevice v5.0.0+ (v6.x recommended)
+#   - Karabiner-DriverKit-VirtualHIDDevice v6.x ONLY (v6.14.0 recommended)
 #     Download: https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/releases
 #
-# kanata v1.8.0+ requires Karabiner-DriverKit-VirtualHIDDevice v5.0.0 or later.
-# Older versions (v1.x-v4.x) use an incompatible IPC mechanism and will cause
-# "connect_failed asio.system:2" errors.
+# kanata 1.11.0 bundles the karabiner-driverkit 0.2.0 crate, which speaks
+# client_protocol_version 5 and expects the daemon socket in the
+#   .../org.pqrs/tmp/rootonly/vhidd_server/  directory.
+#
+# Version compatibility (as of kanata 1.11.0):
+#   - v1.x-v4.x : incompatible IPC  -> "connect_failed asio.system:2"
+#   - v5.x      : old, avoid
+#   - v6.x      : CORRECT (protocol 5, vhidd_server socket path)   <-- use this
+#   - v7.0.0+   : pqrs moved the socket back to a flat path and bumped the
+#                 protocol to 7. kanata looks in vhidd_server/, finds nothing,
+#                 grabs the keyboard but sends output nowhere -> DEAD KEYBOARD,
+#                 with "connect_failed asio.system:2" spamming kanata.out.log.
+#     Do NOT install v7 or v8 until kanata ships a build against the newer
+#     karabiner-driverkit crate.
 
 set -e
 
@@ -22,7 +33,8 @@ KARABINER_DAEMON_PLIST_NAME="com.kanata.karabiner-daemon"
 KARABINER_DAEMON_PLIST_PATH="/Library/LaunchDaemons/$KARABINER_DAEMON_PLIST_NAME.plist"
 KARABINER_DRIVER="/Library/Application Support/org.pqrs/Karabiner-DriverKit-VirtualHIDDevice"
 KARABINER_DAEMON_BIN="$KARABINER_DRIVER/Applications/Karabiner-VirtualHIDDevice-Daemon.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Daemon"
-KARABINER_MIN_VERSION="5.0.0"
+KARABINER_MIN_VERSION="6.0.0"
+KARABINER_MAX_MAJOR="6"   # kanata 1.11.0 is incompatible with v7+ (socket path/protocol changed)
 
 echo "Kanata macOS Installer"
 echo "======================"
@@ -75,29 +87,54 @@ echo "Found Karabiner VirtualHIDDevice driver."
 if [ -n "$KARABINER_VERSION" ]; then
     echo "  Installed version: $KARABINER_VERSION"
 
-    # Compare major version - must be >= 5
+    # kanata 1.11.0 only works with Karabiner driver v6.x.
     MAJOR_VERSION="$(echo "$KARABINER_VERSION" | cut -d. -f1)"
-    if [ "$MAJOR_VERSION" -lt 5 ] 2>/dev/null; then
+    if [ "$MAJOR_VERSION" -lt 6 ] 2>/dev/null; then
         echo ""
         echo "============================================="
         echo "  ERROR: Karabiner driver version too old"
         echo "============================================="
         echo ""
         echo "  Installed: v$KARABINER_VERSION"
-        echo "  Required:  v$KARABINER_MIN_VERSION or later"
+        echo "  Required:  v6.x (v6.14.0 recommended)"
         echo ""
-        echo "  kanata v1.8.0+ requires Karabiner-DriverKit-VirtualHIDDevice v5.0.0+"
+        echo "  kanata 1.11.0 requires Karabiner-DriverKit-VirtualHIDDevice v6.x."
         echo "  Older versions use an incompatible IPC mechanism and will cause"
         echo "  'connect_failed asio.system:2' errors."
         echo ""
-        echo "  To fix:"
-        echo "  1. Uninstall the old version:"
+        echo "  Download v6.14.0:"
+        echo "  https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/releases/download/v6.14.0/Karabiner-DriverKit-VirtualHIDDevice-6.14.0.pkg"
+        echo ""
+        echo "  Then re-run this script."
+        exit 1
+    fi
+    if [ "$MAJOR_VERSION" -gt "$KARABINER_MAX_MAJOR" ] 2>/dev/null; then
+        echo ""
+        echo "============================================="
+        echo "  ERROR: Karabiner driver version too NEW"
+        echo "============================================="
+        echo ""
+        echo "  Installed: v$KARABINER_VERSION"
+        echo "  Required:  v6.x (v6.14.0 recommended)"
+        echo ""
+        echo "  kanata 1.11.0 is NOT compatible with Karabiner driver v7.0.0+."
+        echo "  In v7 the daemon moved its socket from the 'vhidd_server/'"
+        echo "  directory back to a flat path and bumped the client protocol"
+        echo "  from 5 to 7. kanata still looks in 'vhidd_server/', finds no"
+        echo "  socket, and spams 'connect_failed asio.system:2' -- it grabs the"
+        echo "  keyboard but its output goes nowhere, so ALL keys go dead."
+        echo ""
+        echo "  To fix, downgrade to v6.14.0:"
+        echo "  1. Deactivate & remove the current driver:"
         echo "     sudo '$KARABINER_DRIVER/scripts/uninstall/deactivate_driver.sh'"
+        echo "     sudo '$KARABINER_DRIVER/scripts/uninstall/remove_files.sh'"
         echo ""
-        echo "  2. Download and install the latest version from:"
-        echo "     https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/releases"
+        echo "  2. Download and install v6.14.0:"
+        echo "     https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/releases/download/v6.14.0/Karabiner-DriverKit-VirtualHIDDevice-6.14.0.pkg"
         echo ""
-        echo "  3. Re-run this script."
+        echo "  3. Approve the driver extension in"
+        echo "     System Settings > General > Login Items & Extensions,"
+        echo "     then re-run this script."
         exit 1
     fi
 fi
